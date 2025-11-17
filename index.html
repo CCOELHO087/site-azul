@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chapa Juventude Azul - Unidos pela Educação!</title>
+    <!-- NOVO: Ícone do Site (Favicon) - Apenas na aba do navegador -->
+    <link rel="icon" href="https://i.postimg.cc/9XsQg5Xy/Exemplo-removebg-preview.png" type="image/png">
+    <!-- Carrega a biblioteca Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Configurações Tailwind para cores e fontes baseadas na identidade da chapa
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'royal-blue': '#1e40ff', // Azul Principal (Royal Blue)
+                        'dark-blue': '#1d4ed8', // Azul de Destaque
+                        'light-blue-bg': '#f0f4ff', // Fundo sutil para seções (similar ao branco)
+                        'text-primary': '#1f2937', // Texto principal (quase preto)
+                        'text-secondary': '#4b5563', // Texto secundário/descrições
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'], // Fonte moderna e clara
+                    },
+                    boxShadow: {
+                        'xl-blue': '0 10px 25px -3px rgba(30, 64, 255, 0.4)',
+                    },
+                    // Definição de Animação
+                    keyframes: {
+                        fadeInUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        },
+                        pulseSubtle: {
+                            '0%, 100%': { opacity: '1' },
+                            '50%': { opacity: '0.9' },
+                        },
+                        spin: { // Adicionando animação de giro para o loader
+                            to: { transform: 'rotate(360deg)' },
+                        },
+                        // REMOVIDO: Keyframes para a manchete animada (marquee)
+                        
+                    },
+                    animation: {
+                        fadeInUp: 'fadeInUp 0.8s ease-out both',
+                        pulseSubtle: 'pulseSubtle 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        spin: 'spin 1s linear infinite', // Usando o spinner
+                        // REMOVIDO: Animação de manchete
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- CORREÇÃO DE ERRO: O link da fonte estava incorreto. Corrigido para display=swap -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            color: #1f2937; /* text-primary */
+            scroll-behavior: smooth;
+            /* Garante que o conteúdo principal só apareça após o loader */
+            visibility: hidden; 
+        }
+        
+        /* Estilos do Preloader */
+        #preloader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: white;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 0.3s ease-out;
+        }
+
+        .spinner {
+            border: 4px solid rgba(30, 64, 255, 0.1); /* royal-blue transparente */
+            border-top: 4px solid #1e40ff; /* royal-blue sólido */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        /* Efeito de Onda (simulando o elemento do logo) */
+        .wave-top {
+            position: absolute;
+            bottom: 0; 
+            left: 0;
+            width: 100%;
+            overflow: hidden;
+            line-height: 0;
+        }
+        .wave-top svg {
+            position: relative;
+            display: block;
+            width: calc(100% + 1.3px);
+            height: 100px;
+        }
+        .wave-top .shape-fill {
+            fill: #f0f4ff; /* light-blue-bg */
+        }
+        
+        .active-filter {
+            background-color: #1e40ff !important;
+            color: white !important;
+            border-color: #1e40ff !important;
+        }
+        
+        /* NOVO: Estilo para o link de navegação ativo */
+        .active-nav-link {
+            border-bottom: 3px solid #1e40ff; /* royal-blue */
+            padding-bottom: 5px;
+            color: #1e40ff !important; /* Força a cor ativa */
+        }
+
+        /* Classe base para animação de rolagem */
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+        
+        .animate-on-scroll.is-visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        /* Atrasos para a animação sequencial dos cards */
+        .card-delay-1 { transition-delay: 0.1s; }
+        .card-delay-2 { transition-delay: 0.2s; }
+        .card-delay-3 { transition-delay: 0.3s; }
+        .card-delay-4 { transition-delay: 0.4s; }
+        .card-delay-5 { transition-delay: 0.5s; }
+        
+        /* Ajuste de responsividade para a contagem regressiva */
+        .countdown-item {
+            min-width: 55px; /* Reduzido para telas pequenas */
+        }
+        /* Garantindo que o Millisegundo suma em telas muito pequenas */
+        @media (max-width: 400px) {
+            .countdown-ms {
+                display: none;
+            }
+        }
+
+        /* NOVO: Transições para os filtros de propostas */
+        #propostas-lista {
+            transition: opacity 0.3s ease-out;
+            min-height: 100px; /* Evita que o layout "salte" durante a transição */
+        }
+
+        /* NOVO: Transição de hover para os botões de filtro */
+        .filter-btn {
+            transition: all 0.3s ease;
+        }
+        .filter-btn:not(.active-filter):hover {
+            transform: scale(1.05);
+            background-color: #f0f4ff; /* light-blue-bg */
+        }
+        
+        /* REMOVIDO: Estilos de Marquee */
+
+    </style>
+</head>
+<body>
+    
+    <!-- NOVO: TELA DE CARREGAMENTO (PRELOADER) -->
+    <div id="preloader">
+        <div class="spinner mb-4"></div>
+        <p class="text-royal-blue font-semibold">Carregando Chapa Juventude Azul...</p>
+    </div>
+    
+    <!-- TARJA REMOVIDA -->
+
+    <!-- Cabeçalho e Navegação -->
+    <!-- AJUSTADO: Voltando o top para 0 e o z-index para 50, e aplicando a cor da tarja no topo do header -->
+    <header class="sticky top-0 z-50 bg-white shadow-md">
+         <!-- Tarja de cor integrada no header para evitar vazamentos -->
+        <div class="bg-dark-blue h-1 w-full"></div>
+        
+        <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
+            <!-- Logo e Título (Incluindo Ícone) -->
+            <a href="#inicio" class="flex items-center space-x-3 text-royal-blue text-2xl font-black">
+                <!-- Ícone da Chapa para visualização no site -->
+                <img src="https://i.postimg.cc/9XsQg5Xy/Exemplo-removebg-preview.png" onerror="this.onerror=null;this.src='https://placehold.co/32x32/1d4ed8/ffffff?text=JA'" alt="Logo Juventude Azul" class="h-8 w-8 object-contain">
+                <span class="font-extrabold tracking-tight">JUVENTUDE AZUL</span>
+            </a>
+
+            <!-- Links de Navegação (Desktop) -->
+            <div class="hidden lg:flex space-x-8 font-semibold text-text-primary" id="desktop-nav-links">
+                <a href="#inicio" class="nav-link hover:text-royal-blue transition-all duration-300">Início</a>
+                <a href="#quem-somos-full" class="nav-link hover:text-royal-blue transition-all duration-300">Nossa Chapa</a>
+                <a href="#propostas-full" class="nav-link hover:text-royal-blue transition-all duration-300">Propostas</a>
+                <a href="#noticias" class="nav-link hover:text-royal-blue transition-all duration-300">Agenda</a>
+                <a href="#contato" class="py-2 px-6 bg-royal-blue text-white rounded-full shadow-lg hover:bg-dark-blue transition-all duration-300">Entre em Contato</a>
+            </div>
+
+            <!-- Botão do Menu Mobile (Aprimorado com A11Y) -->
+            <button id="mobile-menu-button" class="lg:hidden p-2 rounded-md focus:outline-none focus:ring-2 focus:ring-royal-blue transition duration-300" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobile-menu">
+                <span class="block w-6 h-0.5 bg-royal-blue top-bar transform transition duration-300"></span>
+                <span class="block w-6 h-0.5 bg-royal-blue my-1 middle-bar transition duration-300"></span>
+                <span class="block w-6 h-0.5 bg-royal-blue bottom-bar transform transition duration-300"></span>
+            </button>
+        </nav>
+
+        <!-- Menu Mobile -->
+        <div id="mobile-menu" role="menu" class="hidden lg:hidden bg-white shadow-xl transition-all duration-300 ease-in-out">
+            <div class="pt-2 pb-4 space-y-1 px-2">
+                <a href="#inicio" class="nav-link-mobile block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:bg-light-blue-bg">Início</a>
+                <a href="#quem-somos-full" class="nav-link-mobile block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:bg-light-blue-bg">Nossa Chapa</a>
+                <a href="#propostas-full" class="nav-link-mobile block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:bg-light-blue-bg">Propostas</a>
+                <a href="#noticias" class="nav-link-mobile block px-3 py-2 rounded-md text-base font-medium text-text-primary hover:bg-light-blue-bg">Agenda</a>
+                <a href="#contato" class="block mt-2 mx-3 py-2 text-center bg-royal-blue text-white rounded-full font-medium shadow-md hover:bg-dark-blue">Entre em Contato</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <!-- 1. Página Inicial (Banner Principal) -->
+        <section id="inicio" class="relative bg-royal-blue text-white pt-24 pb-12 sm:pt-32 sm:pb-20 overflow-hidden">
+            <!-- Background com textura sutil para reforçar a identidade -->
+            <div class="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/wavy.png')] opacity-10"></div>
+            
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
+                <p class="text-xl font-semibold mb-2 animate-on-scroll">GRÊMIO ESTUDANTIL | ELEIÇÕES 2025</p>
+                <h1 class="text-4xl sm:text-6xl font-extrabold tracking-tight mb-4 animate-on-scroll card-delay-1">
+                    VOTE JUVENTUDE AZUL
+                </h1>
+                <p class="text-xl sm:text-2xl font-light mb-10 italic animate-on-scroll card-delay-2">
+                    "Unidos pela Educação e pela Sua Voz!"
+                </p>
+                <div class="flex flex-col sm:flex-row justify-center space-y-4 sm:space-y-0 sm:space-x-6 animate-on-scroll card-delay-3">
+                    <a href="#propostas-full" class="bg-white text-royal-blue font-bold py-3 px-8 rounded-full shadow-xl-blue hover:bg-light-blue-bg transition duration-300 transform hover:scale-105">
+                        Conheça Nossas Propostas
+                    </a>
+                    <a href="#quem-somos-full" class="bg-dark-blue text-white font-bold py-3 px-8 rounded-full shadow-xl-blue hover:bg-royal-blue transition duration-300 transform hover:scale-105">
+                        Conhecer os Candidatos
+                    </a>
+                </div>
+                
+                <!-- Contagem Regressiva -->
+                <!-- Ajustado o max-w para acomodar melhor os milissegundos em telas maiores -->
+                <div class="mt-16 mb-8 p-4 bg-white/10 rounded-xl max-w-xl mx-auto shadow-lg border border-white/20 animate-on-scroll card-delay-4">
+                    <p class="text-lg font-semibold mb-2">Faltam para o Dia da Votação (24/11):</p>
+                    <div id="countdown-timer" class="flex justify-center space-x-2 sm:space-x-4 text-center">
+                        <!-- Itens do Contador serão injetados aqui -->
+                    </div>
+                </div>
+
+            </div>
+            
+            <!-- Onda decorativa na parte inferior (Corrigido para bottom=0) -->
+            <div class="wave-top absolute bottom-0 right-0 left-0">
+                <svg data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none">
+                    <path d="M985.66,92.83C906.67,72,823.7,1.82,738.57,11.33,654.49,21.73,564.49,85,491.23,101.52,417.58,118.52,327.36,105.7,249.36,104.59,171.36,103.48,64.24,92.83,0,92.83V120H1200V92.83C1134.48,93.44,1069.91,92.83,985.66,92.83Z" class="shape-fill"></path>
+                </svg>
+            </div>
+        </section>
+
+        <!-- 2. Quem Somos (Preview) -->
+        <section id="quem-somos" class="py-16 sm:py-24 bg-light-blue-bg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+                <h2 class="text-3xl sm:text-4xl font-extrabold text-royal-blue mb-4 animate-on-scroll">
+                    Nossa Chapa: Compromisso e Renovação
+                </h2>
+                <p class="max-w-3xl mx-auto text-xl text-text-secondary mb-8 animate-on-scroll card-delay-1">
+                    A Juventude Azul é formada por alunos de diversos cursos, unidos pelo objetivo de resgatar o papel ativo do Grêmio. Nossa missão é ser a ponte entre a comunidade estudantil e a administração, focando em melhorias concretas.
+                </p>
+                <a href="#quem-somos-full" class="text-lg font-semibold text-royal-blue hover:text-dark-blue transition duration-300 border-b-2 border-royal-blue pb-1 animate-on-scroll card-delay-2">
+                    Conheça Todos os Nossos Candidatos &rarr;
+                </a>
+            </div>
+        </section>
+
+        <!-- 3. Propostas (Destaque) -->
+        <section id="propostas-preview" class="py-16 sm:py-24 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-center text-3xl sm:text-4xl font-extrabold text-text-primary mb-12 animate-on-scroll">
+                    Nossas Prioridades para a Escola
+                </h2>
+                
+                <div id="propostas-destaque-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                    <!-- Cards de Propostas Serão Injetados Aqui (Conteúdo Real e Específico) -->
+                </div>
+                
+                <div class="text-center mt-12 animate-on-scroll card-delay-5">
+                    <a href="#propostas-full" class="inline-block py-3 px-8 bg-royal-blue text-white font-bold rounded-full shadow-lg hover:bg-dark-blue transition duration-300 transform hover:scale-105">
+                        Leia Nosso Plano de Gestão Completo
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- NOVO: Página Detalhada de Propostas (Projetos e Campanha) -->
+        <section id="propostas-full" class="py-16 sm:py-24 bg-light-blue-bg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-center text-3xl sm:text-4xl font-extrabold text-royal-blue mb-4 animate-on-scroll">
+                    Plano de Gestão: Nossos Projetos e Ações
+                </h2>
+                <p class="text-center text-xl mb-12 text-text-secondary max-w-4xl mx-auto animate-on-scroll card-delay-1">
+                    Apresentamos as propostas detalhadas da Juventude Azul, organizadas por área de atuação. Clique nas categorias para filtrar.
+                </p>
+
+                <!-- Filtros por Categoria -->
+                <div class="flex flex-wrap justify-center gap-3 mb-12 animate-on-scroll card-delay-2" id="filter-buttons">
+                    <button data-filter="Todos" class="filter-btn active-filter py-2 px-4 border border-royal-blue text-royal-blue font-semibold rounded-full transition duration-300 hover:bg-royal-blue hover:text-white">
+                        Todos (30)
+                    </button>
+                    <!-- Os botões de filtro serão injetados dinamicamente pelo JS -->
+                </div>
+
+                <!-- Lista de Propostas Detalhadas -->
+                <div id="propostas-lista" class="space-y-8">
+                    <!-- Propostas serão injetadas aqui -->
+                </div>
+
+                <div class="text-center mt-12 animate-on-scroll card-delay-5">
+                     <p class="text-lg text-text-secondary">Tem uma ideia para somar ao nosso plano? Participe!</p>
+                     <a href="#contato" class="inline-block mt-3 text-lg font-semibold text-royal-blue hover:text-dark-blue transition duration-300 border-b-2 border-royal-blue pb-1">
+                        Envie uma Sugestão via WhatsApp &rarr;
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. Últimas Notícias (AGENDA ELEITORAL) -->
+        <section id="noticias" class="py-16 sm:py-24 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-center text-3xl sm:text-4xl font-extrabold text-royal-blue mb-12 animate-on-scroll">
+                    Cronograma Oficial das Eleições 2025
+                </h2>
+                
+                <div id="noticias-container" class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <!-- Cards de Notícias (Agenda) Serão Injetados Aqui -->
+                </div>
+
+                <div class="text-center mt-12 animate-on-scroll card-delay-5">
+                    <!-- BOTÃO: Redireciona para o Instagram -->
+                    <a href="https://www.instagram.com/juventudeazul.if/" target="_blank" class="inline-block text-lg font-semibold text-royal-blue hover:text-dark-blue transition duration-300 border-b-2 border-royal-blue pb-1">
+                        Acompanhe Todas as Publicações &rarr;
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. Galeria de Membros (Página 'Quem Somos' Detalhada) -->
+        <section id="quem-somos-full" class="py-16 sm:py-24 bg-light-blue-bg">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-center text-3xl sm:text-4xl font-extrabold text-royal-blue mb-4 animate-on-scroll">
+                    Conheça a Chapa Juventude Azul
+                </h2>
+                <p class="text-center text-xl mb-12 text-text-secondary animate-on-scroll card-delay-1">
+                    Nossa equipe é diversa, engajada e pronta para lutar pelos seus direitos.
+                </p>
+
+                <div id="membros-galeria" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6">
+                    <!-- Cards de Membros Serão Injetados Aqui (Conteúdo Real e Completo) -->
+                </div>
+            </div>
+        </section>
+        
+        <!-- 6. Contato (Formulário e Informações) -->
+        <section id="contato" class="py-16 sm:py-24 bg-dark-blue text-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-center text-3xl sm:text-4xl font-extrabold mb-12 animate-on-scroll">
+                    Pergunte, Sugira e Participe
+                </h2>
+                
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                    <!-- Informações de Contato (Bloco esquerdo) -->
+                    <div class="lg:col-span-1 space-y-6">
+                        
+                        <!-- Bloco de E-mail (Atualizado) -->
+                        <div class="p-6 bg-royal-blue rounded-xl shadow-lg animate-on-scroll card-delay-1">
+                            <h3 class="text-xl font-bold mb-2">E-mail Oficial</h3>
+                            <p class="text-light-blue-bg break-words">Juventudeazul.if@gmail.com</p>
+                        </div>
+                        
+                        <!-- Bloco de Instagram -->
+                        <div class="p-6 bg-royal-blue rounded-xl shadow-lg text-center animate-on-scroll card-delay-2">
+                            <h3 class="text-xl font-bold mb-3">Acompanhe a Campanha</h3>
+                            <a href="https://instagram.com/juventudeazul.if" target="_blank" class="text-4xl hover:text-white transition duration-300 font-extrabold">
+                                @juventudeazul.if
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Formulário de Contato - Redireciona para o WhatsApp (Bloco direito) -->
+                    <div class="lg:col-span-2 bg-white p-8 sm:p-12 rounded-xl shadow-xl animate-on-scroll card-delay-3">
+                         <!-- NOVO: Feedback de envio -->
+                        <div id="form-feedback" class="hidden p-3 mb-4 text-center bg-green-100 text-green-800 rounded-lg font-semibold">
+                            Mensagem pronta! Redirecionando para o WhatsApp...
+                        </div>
+                        <form id="contact-form" class="space-y-4">
+                            <div>
+                                <label for="nome" class="block text-sm font-medium text-text-primary">Seu Nome</label>
+                                <input type="text" id="nome" name="nome" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-royal-blue focus:border-royal-blue transition duration-300 text-black">
+                            </div>
+                            <div>
+                                <label for="email" class="block text-sm font-medium text-text-primary">Seu E-mail Institucional</label>
+                                <input type="email" id="email" name="email" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-royal-blue focus:border-royal-blue transition duration-300 text-black">
+                            </div>
+                            <div>
+                                <label for="mensagem" class="block text-sm font-medium text-text-primary">Dúvida, Crítica ou Sugestão para a Chapa</label>
+                                <textarea id="mensagem" name="mensagem" rows="5" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-lg shadow-sm focus:ring-royal-blue focus:border-royal-blue transition duration-300 text-black"></textarea>
+                            </div>
+                            <button type="submit" class="w-full py-3 px-6 bg-royal-blue text-white font-bold rounded-lg shadow-lg hover:bg-dark-blue transition duration-300 transform hover:scale-[1.01] animate-pulseSubtle">
+                                Enviar Mensagem via WhatsApp
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Rodapé -->
+    <footer class="bg-royal-blue text-white py-8">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <p class="text-sm opacity-80">&copy; 2025 CCOELHO PRODUCOES AUDIOVISUAIS LTDA. Chapa Juventude Azul. Unidos pela Educação.</p>
+        </div>
+    </footer>
+
+    <script>
+        // ====================================================================
+        // DADOS REAIS SIMULADOS (ATUALIZADOS COM FOTOS REAIS DOS MEMBROS)
+        // ====================================================================
+
+        // 1. DADOS DE MEMBROS (Diretoria Completa e Real)
+        // DADOS ATUALIZADOS COM A ORDEM E NOMENCLATURA OFICIAL FORNECIDA PELO USUÁRIO
+        const membrosData = [
+            { nome: "Milenna Mary", cargo: "Presidente", fotoUrl: "https://i.postimg.cc/Zqxwgcxd/99A7950-1.jpg" },
+            { nome: "Henzo Lins", cargo: "Vice-Presidente", fotoUrl: "https://i.postimg.cc/dtndzxz9/599A5596.jpg" },
+            { nome: "Emanuel", cargo: "Secretário(a) Geral", fotoUrl: "https://i.postimg.cc/BQZNLH3r/IMG-0315.jpg" },
+            { nome: "Laysa", cargo: "Diretor(a) de Finanças", fotoUrl: "https://i.postimg.cc/t4ks1nqp/599A5585.jpg" },
+            { nome: "Gabriel Anjos", cargo: "Dir. Comunicação, Marketing e Relações Externas", fotoUrl: "https://i.postimg.cc/Dwrz9JJf/IMG-4251.jpg" },
+            { nome: "Kelvin", cargo: "Dir. Esporte, Lazer e Qualidade de Vida", fotoUrl: "https://i.postimg.cc/JnBvFJtR/99A8124.jpg" },
+            { nome: "Cauê", cargo: "Dir. de Políticas Estudantis", fotoUrl: "https://i.postimg.cc/1RfLgkKV/599A5553.jpg" },
+            { nome: "Jaqueline Rufino", cargo: "Dir. Formação Política e Sustentabilidade", fotoUrl: "https://i.postimg.cc/cLmDkhmx/599A5548.jpg" },
+            { nome: "Myrian Rebecca", cargo: "Dir. Arte, Cultura e Eventos", fotoUrl: "https://i.postimg.cc/SRRqjjxJ/599A5650.jpg" },
+            { nome: "Glauber", cargo: "Diretoria de Direitos Humanos", fotoUrl: "https://i.postimg.cc/02pxjg83/99A8089.jpg" },
+            { nome: "Camyla", cargo: "Diretoria de Agroindústria", fotoUrl: "https://i.postimg.cc/5yB5Y9KC/599A5563.jpg" },
+            { nome: "Mariany Cardoso", cargo: "Diretoria de Agropecuária", fotoUrl: "https://i.postimg.cc/BbSbpqQ5/599A5643.jpg" },
+            { nome: "Isabele Vitória", cargo: "Diretoria de Informática", fotoUrl: "https://i.postimg.cc/bwhy9yCz/99A8065.jpg" },
+            { nome: "Brena", cargo: "Diretoria de Edificações", fotoUrl: "https://i.postimg.cc/NMTCDcPs/IMG-0119.jpg" },
+        ];
+
+        // 2. DADOS DE PROPOSTAS DETALHADAS (Contém todas as propostas)
+        // REORGANIZAÇÃO COMPLETA: Alinhando projetos com as diretorias mais apropriadas.
+        const propostasCompletasData = [
+            // ====================================================================
+            // 1. DIRETORIA DE AGROPECUÁRIA (3 projetos)
+            // ====================================================================
+            { id: 1, titulo: "Feira de Agropecuária Escolar", categoria: "Agropecuária", icone: "🌽", status: "Garantido", resumo: "Realizar uma feira de exposição e venda dos produtos agrícolas e derivados feitos pelos alunos.", detalhe: "Exposição de hortaliças, mudas, artesanato rural e derivados do leite, promovendo a integração e a aplicação prática do aprendizado." },
+            { id: 2, titulo: "Revista Agro Jovem", categoria: "Agropecuária", icone: "📰", status: "A Lutar", resumo: "Criação de uma revista semestral para divulgar notícias, eventos e resultados do setor de Agropecuária.", detalhe: "A Revista Agro Jovem terá foco em notícias, eventos e resultados do setor de Agropecuária, valorizando as produções dos alunos." },
+            { id: 3, titulo: "Parcerias com Técnicos e Agrônomos", categoria: "Agropecuária", icone: "🤝", status: "Prioridade", resumo: "Promover parcerias com profissionais da área para minicursos e palestras informativas.", detalhe: "Organização de eventos com técnicos e agrônomos para promover minicursos e palestras, ampliando o conhecimento e networking dos alunos." },
+
+            // ====================================================================
+            // 2. DIRETORIA DE AGROINDÚSTRIA (1 projeto)
+            // ====================================================================
+            { id: 4, titulo: "Consultoria e Capacitação Técnica", categoria: "Agroindústria", icone: "⚙️", status: "Garantido", resumo: "Oferecer consultoria e capacitação sobre equipamentos e normas técnicas para uso da agroindústria.", detalhe: "Capacitação e consultoria sobre o uso dos equipamentos e normas técnicas do setor, garantindo a segurança e qualidade dos processos." },
+            
+            // ====================================================================
+            // 3. DIRETORIA DE EDIFICAÇÕES (1 projeto) - NOVO PROJETO
+            // ====================================================================
+            { id: 34, titulo: "Expansão da Semana de Edificações", categoria: "Edificações", icone: "📐", status: "A Lutar", resumo: "Ampliar o número de visitas técnicas, exposições de projetos e maquetes, e convidar palestrantes do setor.", detalhe: "Valorização dos projetos e maior integração com a realidade do mercado de trabalho através de mais eventos e visitas externas." },
+
+            // ====================================================================
+            // 4. DIR. ARTE, CULTURA E EVENTOS (4 projetos)
+            // ====================================================================
+            { id: 5, titulo: "Oficina de Aquarela 'Mundo das Tintas'", categoria: "Arte e Cultura/Eventos", icone: "🎨", status: "Garantido", resumo: "Oficina de produção de pigmentos naturais para tinturas, cosméticos e artesanato a partir de produtos da agroindústria.", detalhe: "Aprender a extrair pigmentos de produtos agroindustriais para produção de tintas, cosméticos e artesanato." },
+            { id: 6, titulo: "Instalação de Murais Temáticos", categoria: "Arte e Cultura/Eventos", icone: "🖼️", status: "Garantido", resumo: "Instalação de murais temáticos dedicados à cultura, diversidade agroindustrial e sustentabilidade no campus.", detalhe: "Criação de murais com temas relacionados à agroindústria, cultura, diversidade e sustentabilidade, promovendo a conscientização." },
+            { id: 7, titulo: "Cineclube e Debate Cultural", categoria: "Arte e Cultura/Eventos", icone: "🎬", status: "Garantido", resumo: "Exibição mensal de filmes culturais e nacionais, seguido de debates para fomentar o pensamento crítico.", detalhe: "O Cineclube garante a exibição de filmes culturais e nacionais, seguido de debates para incentivar o pensamento crítico." },
+            { id: 8, titulo: "Mostra Científica e Cultural Estudantil", categoria: "Arte e Cultura/Eventos", icone: "🔬", status: "Garantido", resumo: "Realização de uma mostra cultural e científica para expor talentos artísticos e projetos de pesquisa dos alunos.", detalhe: "Evento para exposição de projetos de pesquisa e talentos artísticos dos alunos, promovendo a integração entre ciência e cultura." },
+
+            // ====================================================================
+            // 5. DIR. COMUNICAÇÃO, MARKETING E RELAÇÕES EXTERNAS (4 projetos)
+            // ====================================================================
+            { id: 11, titulo: "Cobertura Completa de Eventos", categoria: "Comunicação/Marketing", icone: "📸", status: "Garantido", resumo: "Realizar cobertura de todos os eventos da escola, divulgando nas redes sociais e mídias oficiais.", detalhe: "Garantir a divulgação de todos os eventos e atividades da escola nas redes sociais e canais oficiais." },
+            { id: 12, titulo: "Melhoria na Divulgação de Eventos", categoria: "Comunicação/Marketing", icone: "📣", status: "Garantido", resumo: "Implementar estratégias de marketing digital para aumentar o alcance e o engajamento do Instagram oficial da chapa/grêmio.", detalhe: "Utilizar o Instagram e outras mídias sociais para divulgar eventos e informações, aumentando o engajamento e a participação dos alunos." },
+            { id: 13, titulo: "Local de Gravação e Produção", categoria: "Comunicação/Marketing", icone: "🎙️", status: "A Lutar", resumo: "Criação de um espaço multiuso para gravação de vídeos, podcasts, entrevistas e produção de conteúdo multimídia.", detalhe: "Um espaço equipado para que os alunos possam gravar vídeos, podcasts, entrevistas e produzir conteúdo multimídia para projetos pessoais e da escola." },
+            { id: 14, titulo: "Criação de um Site Oficial", categoria: "Comunicação/Marketing", icone: "🌐", status: "Prioridade", resumo: "Desenvolvimento de um site para centralizar informações sobre a chapa, propostas, notícias e eventos.", detalhe: "Centralizar informações sobre a chapa, propostas, notícias e eventos em um site oficial de fácil acesso e navegação." }, 
+
+            // ====================================================================
+            // 6. DIR. ESPORTE, LAZER E QUALIDADE DE VIDA (6 projetos)
+            // ====================================================================
+            { id: 15, titulo: "Interclasses Esportivos", categoria: "Esporte/Lazer/Q. Vida", icone: "🏆", status: "Garantido", resumo: "Realizar interclasses e campeonatos esportivos para turmas, incentivando a prática esportiva e a integração.", detalhe: "Organização de campeonatos mistos e femininos, incluindo modalidades alternativas, garantindo a inclusão." },
+            { id: 16, titulo: "Aulas de Alongamento e Funcional", categoria: "Esporte/Lazer/Q. Vida", icone: "🤸", status: "Garantido", resumo: "Oferta de aulas gratuitas de alongamento, zumba e funcional para toda a comunidade escolar.", detalhe: "Aulas gratuitas de alongamento, zumba e funcional, incentivando a prática regular de atividades físicas e a melhoria da qualidade de vida." },
+            { id: 17, titulo: "Inclusão de Modalidades Alternativas", categoria: "Esporte/Lazer/Q. Vida", icone: "🏓", status: "Garantido", resumo: "Inserir e promover modalidades esportivas alternativas, como queimada e tênis de mesa.", detalhe: "Promover modalidades esportivas alternativas, como queimada, tênis de mesa e atletismo, para atrair mais alunos e diversificar as opções." },
+            { id: 18, titulo: "Movimenta Escola", categoria: "Esporte/Lazer/Q. Vida", icone: "🏃", status: "Garantido", resumo: "Implementação do Movimenta Escola, incentivando a prática regular de atividades físicas entre alunos e professores.", detalhe: "Incentivo à prática regular de atividades físicas entre alunos e professores para maior integração." },
+            { id: 19, titulo: "Mural Esportivo de Destaque", categoria: "Esporte/Lazer/Q. Vida", icone: "🏅", status: "Garantido", resumo: "Criação de um mural esportivo para dar destaque aos participantes, equipes e resultados dos campeonatos.", detalhe: "Valorização do esforço e do espírito esportivo, reconhecendo os talentos da escola em eventos internos e externos." },
+            { id: 20, titulo: "Desafios entre Alunos e Professores", categoria: "Esporte/Lazer/Q. Vida", icone: "🆚", status: "Garantido", resumo: "Organização de desafios e jogos amistosos entre alunos e professores, com foco na integração e diversão.", detalhe: "Promover desafios e jogos amistosos entre alunos e professores, com foco na integração e diversão." },
+
+            // ====================================================================
+            // 7. DIR. DE POLÍTICAS ESTUDANTIS (4 projetos)
+            // ====================================================================
+            { id: 21, titulo: "Acolhimento de Denúncias e Sugestões", categoria: "Políticas Estudantis", icone: "🤝", status: "Prioridade", resumo: "Criação de um canal de diálogo e acolhimento seguro para denúncias, sugestões e demandas estudantis.", detalhe: "Manter um canal de diálogo constante entre a Diretoria e os alunos, ouvindo demandas, sugestões e denúncias de forma sigilosa." },
+            { id: 22, titulo: "Realização de Aulões no Auditório", categoria: "Políticas Estudantis", icone: "🧑‍🏫", status: "Garantido", resumo: "Organização de aulões no auditório para reforço de conteúdo em disciplinas com maior dificuldade.", detalhe: "Aulões integrados com professores de diferentes disciplinas para reforçar conteúdos e auxiliar com dificuldades acadêmicas." },
+            { id: 23, titulo: "Criação de Sistema para Ouvidoria", categoria: "Políticas Estudantis", icone: "💬", status: "Garantido", resumo: "Desenvolvimento de um sistema online para facilitar a comunicação e o registro de demandas da ouvidoria estudantil.", detalhe: "Um sistema online para facilitar o envio de demandas, sugestões e denúncias, garantindo o acompanhamento e a resposta." },
+            { id: 24, titulo: "Audiências para Prestação de Contas", categoria: "Políticas Estudantis", icone: "⚖️", status: "Garantido", resumo: "Audiências públicas para prestação de contas do Grêmio Estudantil, promovendo a transparência da gestão.", detalhe: "Realização de audiências públicas para prestação de contas do Grêmio, garantindo a transparência e a participação dos alunos." },
+
+            // ====================================================================
+            // 8. DIR. FORMAÇÃO POLÍTICA E SUSTENTABILIDADE (2 projetos) - NOVO GRUPO
+            // ====================================================================
+            { id: 9, titulo: "Cursos de Formação Política e Cidadania", categoria: "Formação Pol./Sustentabilidade", icone: "📚", status: "Garantido", resumo: "Oferecer minicursos e oficinas sobre política estudantil, oratória, direitos do aluno e educação para cidadania.", detalhe: "Organizar eventos para capacitar os alunos a participar ativamente das decisões da comunidade e entender seus direitos e deveres." },
+            { id: 32, titulo: "Comissão de Sustentabilidade no Campus", categoria: "Formação Pol./Sustentabilidade", icone: "♻️", status: "A Lutar", resumo: "Implantação de coletores de lixo reciclável e campanhas de conscientização sobre descarte correto e consumo consciente.", detalhe: "A comissão promoverá a conscientização e proporá melhorias ambientais contínuas no campus, focando em reciclagem e reuso." },
+            
+            // ====================================================================
+            // 9. DIRETORIA DE DIREITOS HUMANOS (4 projetos)
+            // ====================================================================
+            { id: 25, titulo: "Iniciativas Anti-Bullying e Preconceito", categoria: "Direitos Humanos", icone: "🛡️", status: "Prioridade", resumo: "Promover rodas de conversas e campanhas ativas para combater assédio, preconceito e bullying no campus.", detalhe: "Campanhas ativas e rodas de conversas para combater o bullying, assédio e preconceito, promovendo um ambiente escolar seguro e inclusivo." },
+            { id: 26, titulo: "Multidisciplinar de Direitos Humanos", categoria: "Direitos Humanos", icone: "👥", status: "Garantido", resumo: "Organizar eventos e cursos multidisciplinares para debater direitos humanos, cidadania e inclusão.", detalhe: "Eventos e cursos de 40 a 60 minutos sobre direitos humanos, cidadania e inclusão, ampliando a conscientização e a formação política." },
+            { id: 27, titulo: "Coleta Solidária", categoria: "Direitos Humanos", icone: "📦", status: "Garantido", resumo: "Promover campanhas de coleta solidária de roupas e alimentos não perecíveis para doação.", detalhe: "Organização de campanhas de coleta solidária de roupas e alimentos para doação a instituições de caridade." },
+            { id: 28, titulo: "Parcerias para Estágios Profissionais", categoria: "Direitos Humanos", icone: "💼", status: "Prioridade", resumo: "Criar parcerias com profissionais da área para oferecer estágios de práticas aos alunos.", detalhe: "Parcerias com profissionais da área de Direitos Humanos para oferecer estágios de práticas e ampliar a vivência dos alunos no mercado de trabalho." },
+
+            // ====================================================================
+            // 10. DIRETORIA DE INFORMÁTICA (3 projetos)
+            // ====================================================================
+            { id: 29, titulo: "Encontros Quinzenais com Representantes", categoria: "Informática", icone: "💬", status: "Garantido", resumo: "Realizar encontros periódicos com representantes das turmas para coletar demandas e sugestões da área.", detalhe: "Manter um canal de diálogo constante com os alunos da área de informática, registrando demandas e sugestões." },
+            { id: 30, titulo: "Projeto 'Aluno Conectado'", categoria: "Informática", icone: "💻", status: "Garantido", resumo: "Promover ações e oficinas para ensinar alunos de outros cursos a usar ferramentas tecnológicas essenciais (sites, jogos, programação básica).", detalhe: "Oferecer oficinas e aulas de curta duração sobre temas práticos (Python, sites, jogos) para capacitar alunos de todos os cursos." },
+            { id: 31, titulo: "Oficinas de Programação e Edição", categoria: "Informática", icone: "📝", status: "Garantido", resumo: "Realizar oficinas sobre linguagens de programação e edição de vídeos/imagens para aprimoramento técnico.", detalhe: "Oferecer oficinas de programação e edição de vídeos/imagens para aprimoramento técnico e desenvolvimento de habilidades úteis." },
+        ];
+
+        // Mapeamento para os destaques da HOME (usando as IDs do array completo)
+        // IDs ATUALIZADAS (ID 1, 4, 14, 15)
+        const propostasDestaqueData = [
+            propostasCompletasData.find(p => p.id === 1), // Feira de Agropecuária
+            propostasCompletasData.find(p => p.id === 4), // Consultoria Agroindústria
+            propostasCompletasData.find(p => p.id === 14), // Criação de um Site Oficial (este site)
+            propostasCompletasData.find(p => p.id === 15), // Interclasses Esportivos
+        ];
+        
+        // 3. DADOS DE NOTÍCIAS (ATUALIZADO PARA O CRONOGRAMA OFICIAL DO EDITAL)
+        const noticiasData = [
+            { titulo: "Inscrições de Chapas (ÚLTIMO DIA)", data: "11 e 12/11/2025", resumo: "Período para envio do formulário virtual de inscrição de chapas, encerrando às 22h do dia 12." },
+            { titulo: "Início Oficial da Campanha", data: "13/11/2025", resumo: "Divulgação das chapas inscritas e início da Campanha Eleitoral conforme as regras do Edital." },
+            { titulo: "FIM da Campanha Eleitoral", data: "19/11/2025", resumo: "Último dia para a Campanha Eleitoral das Chapas Inscritas. Foco total em debates e propostas!" },
+            { titulo: "DIA DA VOTAÇÃO", data: "24/11/2025", resumo: "Votação via Sistema Helios, das 08h às 22h. O voto é facultativo e secreto. Participe!" },
+            { titulo: "Apuração dos Votos", data: "25/11/2025", resumo: "Processo de apuração conduzido pela Comissão Eleitoral. Acompanhe a divulgação do resultado!" },
+            { titulo: "Posse da Chapa Vencedora", data: "01/12/2025", resumo: "Realização da assembleia para a posse da Diretoria do Grêmio Estudantil Gestão 2026/2027." },
+        ];
+
+
+        // ====================================================================
+        // FUNÇÕES DE RENDERIZAÇÃO E INTERAÇÃO
+        // ====================================================================
+        
+        let categoriasUnicas = [];
+        let propostasAtuais = [...propostasCompletasData];
+        let statusMap = {
+            "Prioridade": "bg-red-100 text-red-800 border-red-800",
+            "Garantido": "bg-green-100 text-green-800 border-green-800",
+            "A Lutar": "bg-yellow-100 text-yellow-800 border-yellow-800"
+        };
+        
+        /** Inicializa as categorias e conta o número de propostas */
+        function initCategorias() {
+            const categorias = propostasCompletasData.map(p => p.categoria);
+            const counts = categorias.reduce((acc, cat) => {
+                // Remove '/Eventos', '/Marketing', '/Q. Vida', '/Sustentabilidade' para o nome do botão
+                const nomeBotao = cat.split('/')[0].trim();
+                acc[nomeBotao] = (acc[nomeBotao] || 0) + 1;
+                return acc;
+            }, {});
+            
+            // Adiciona a contagem total ao botão "Todos" e atualiza o texto
+            const todosButton = document.querySelector('[data-filter="Todos"]');
+            if (todosButton) {
+                todosButton.textContent = `Todos (${propostasCompletasData.length})`;
+            }
+            
+            // Mapeia categorias únicas para botões
+            categoriasUnicas = Object.keys(counts).map(cat => ({
+                nome: cat,
+                count: counts[cat]
+            }));
+            
+            // Chama a renderização dos botões
+            renderFilterButtons();
+        }
+
+        /** Renderiza os botões de filtro */
+        function renderFilterButtons() {
+            const container = document.getElementById('filter-buttons');
+            if (!container) return;
+
+            // Encontra o botão "Todos" existente
+            const todosButton = document.querySelector('[data-filter="Todos"]');
+            
+            // Filtra as categorias para que a Formação Política apareça com o nome correto
+            const buttonsHtml = categoriasUnicas.map(cat => {
+                // A categoria 'Formação Pol.' deve ser tratada como um nome único para o botão
+                const displayName = cat.nome.includes('Formação Pol.') ? 'Formação Política/Sustentabilidade' : cat.nome;
+                
+                return `
+                    <button data-filter="${cat.nome}" class="filter-btn py-2 px-4 border border-royal-blue text-royal-blue font-semibold rounded-full">
+                        ${displayName} (${cat.count})
+                    </button>
+                `;
+            }).join('');
+
+            // Limpa o container, removendo todos os botões (exceto o "Todos" se for mantido pela função initCategorias)
+            container.innerHTML = '';
+             if (todosButton) {
+                container.appendChild(todosButton);
+                todosButton.classList.add('active-filter'); // Garante que "Todos" seja o padrão
+            } else {
+                 container.insertAdjacentHTML('beforeend', `<button data-filter="Todos" class="filter-btn active-filter py-2 px-4 border border-royal-blue text-royal-blue font-semibold rounded-full">Todos (${propostasCompletasData.length})</button>`);
+            }
+            container.insertAdjacentHTML('beforeend', buttonsHtml);
+
+            // Adiciona listeners para os botões de filtro
+            document.querySelectorAll('.filter-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const filter = button.getAttribute('data-filter');
+                    filterPropostas(filter); // AQUI ESTÁ A MUDANÇA
+                    
+                    // Atualiza a classe ativa
+                    document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active-filter'));
+                    button.classList.add('active-filter');
+                });
+            });
+        }
+        
+        /** NOVO: Filtra e renderiza as propostas com transição de fade */
+        function filterPropostas(filter) {
+            const container = document.getElementById('propostas-lista');
+            if (!container) return;
+
+            // 1. Aplica o fade-out
+            container.style.opacity = '0';
+
+            // 2. Espera a transição de 300ms (definida no CSS)
+            setTimeout(() => {
+                // 3. Filtra os dados. Se o filtro for 'Arte e Cultura', inclui 'Arte e Cultura/Eventos'
+                if (filter === 'Todos') {
+                    propostasAtuais = [...propostasCompletasData];
+                } else if (filter === 'Arte e Cultura') {
+                     // Filtra por "Arte e Cultura" OU "Arte e Cultura/Eventos"
+                    propostasAtuais = propostasCompletasData.filter(p => p.categoria.includes(filter));
+                } else {
+                    // Filtra pela categoria exata, que é o nome principal (ex: Agropecuária)
+                    propostasAtuais = propostasCompletasData.filter(p => p.categoria.split('/')[0].trim() === filter);
+                }
+
+
+                // 4. Renderiza o novo conteúdo (ainda invisível)
+                renderPropostasLista(propostasAtuais);
+                
+                // 5. Aplica o fade-in
+                container.style.opacity = '1';
+            }, 300); // Deve corresponder ao tempo de transição no CSS
+        }
+
+
+        /** Renderiza a lista completa de propostas filtradas (agora sem a lógica de transição) */
+        function renderPropostasLista(propostas) {
+            const container = document.getElementById('propostas-lista');
+            if (!container) return;
+            
+            if (propostas.length === 0) {
+                 container.innerHTML = `<div class="text-center p-8 bg-white rounded-xl shadow-md"><p class="text-xl text-text-secondary">Nenhuma proposta encontrada para esta categoria.</p></div>`;
+                 return;
+            }
+
+            // A classe 'animate-on-scroll' é adicionada para que a animação de rolagem ainda funcione
+            // ao rolar para baixo na lista filtrada.
+            container.innerHTML = propostas.map(proposta => `
+                <div class="bg-white p-6 rounded-xl shadow-lg border-l-4 border-royal-blue transform hover:scale-[1.01] transition duration-300 animate-on-scroll">
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-3">
+                        <h3 class="text-2xl font-extrabold text-text-primary mb-2 sm:mb-0">
+                            ${proposta.icone} ${proposta.titulo}
+                        </h3>
+                        <div class="flex items-center space-x-2">
+                            <span class="px-3 py-1 text-xs font-bold rounded-full border ${statusMap[proposta.status] || 'bg-gray-100 text-gray-800 border-gray-800'}">
+                                Status: ${proposta.status}
+                            </span>
+                            <span class="px-3 py-1 bg-light-blue-bg text-royal-blue text-xs font-semibold rounded-full">
+                                ${proposta.categoria}
+                            </span>
+                        </div>
+                    </div>
+                    <p class="text-text-secondary text-lg mb-4 font-semibold">${proposta.resumo}</p>
+                    <p class="text-text-primary italic">${proposta.detalhe}</p>
+                </div>
+            `).join('');
+            
+            // Re-aplica as animações de rolagem aos novos elementos
+            setupScrollAnimations(); 
+        }
+
+        /** Renderiza os cards de propostas na seção de destaque da home. */
+        function renderPropostasDestaque() {
+            const container = document.getElementById('propostas-destaque-container');
+            if (!container) return;
+
+            // Lógica para garantir que os destaques existam após a atualização dos dados
+            const validDestaques = propostasDestaqueData.filter(p => p);
+            
+            container.innerHTML = validDestaques.map((proposta, index) => {
+                // Adiciona um fallback se a proposta for indefinida (caso não encontre a ID)
+                if (!proposta) return ''; 
+
+                return `
+                <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-royal-blue transform hover:scale-[1.03] transition duration-300 animate-on-scroll card-delay-${index + 1}">
+                    <div class="text-3xl mb-3">${proposta.icone}</div>
+                    <h3 class="text-xl font-bold text-text-primary mb-2">${proposta.titulo}</h3>
+                    <p class="text-sm text-text-secondary">${proposta.resumo}</p>
+                    <span class="inline-block mt-3 px-3 py-1 bg-light-blue-bg text-royal-blue text-xs font-semibold rounded-full">${proposta.categoria.split('/')[0]}</span>
+                </div>
+                `;
+            }).join('');
+            setupScrollAnimations(); // Re-aplica as animações após a renderização
+        }
+
+        /** Renderiza os cards de notícias (Agenda) na seção de notícias da home. */
+        function renderNoticiasPreview() {
+            const container = document.getElementById('noticias-container');
+            if (!container) return;
+
+            container.innerHTML = noticiasData.map((noticia, index) => `
+                <article class="bg-white p-6 rounded-xl shadow-md border-l-4 border-dark-blue hover:shadow-lg transition duration-300 animate-on-scroll card-delay-${index + 1}">
+                    <p class="text-xs text-gray-500 mb-2 font-semibold">${noticia.data}</p>
+                    <h3 class="text-lg font-bold text-text-primary mb-3">${noticia.titulo}</h3>
+                    <p class="text-sm text-text-secondary">${noticia.resumo}</p>
+                    <a href="https://www.instagram.com/juventudeazul.if/" target="_blank" class="mt-4 block text-royal-blue text-sm font-semibold hover:text-dark-blue">
+                        Leia mais na nossa página &rarr;
+                    </a>
+                </article>
+            `).join('');
+            setupScrollAnimations(); // Re-aplica as animações após a renderização
+        }
+
+        /** Renderiza os cards de membros na página 'Quem Somos'. */
+        function renderMembrosGaleria() {
+            const container = document.getElementById('membros-galeria');
+            if (!container) return;
+
+            // Renderiza os membros usando a nova estrutura de dados
+            container.innerHTML = membrosData.map((membro, index) => `
+                <!-- Ajuste de alinhamento com justify-center e text-center -->
+                <div class="flex flex-col items-center text-center p-4 bg-light-blue-bg rounded-xl shadow-md border-t-4 border-royal-blue transform hover:shadow-xl hover:scale-[1.05] transition duration-300 animate-on-scroll card-delay-${(index % 5) + 1}">
+                    <img src="${membro.fotoUrl}" onerror="this.onerror=null; this.src='https://placehold.co/150x150/1d4ed8/ffffff?text=${membro.nome.split(' ').map(n => n[0]).join('.')}'" alt="Foto de ${membro.nome}" class="w-28 h-28 object-cover rounded-full mb-3 border-4 border-white shadow-md">
+                    <h3 class="text-base font-bold text-text-primary">${membro.nome}</h3>
+                    <p class="text-sm font-medium text-royal-blue">${membro.cargo}</p>
+                </div>
+            `).join('');
+            setupScrollAnimations(); // Re-aplica as animações após a renderização
+        }
+
+        /** Lógica para o menu mobile e A11Y (Aprimorado) */
+        function setupMobileMenu() {
+            const button = document.getElementById('mobile-menu-button');
+            const menu = document.getElementById('mobile-menu');
+
+            button.addEventListener('click', () => {
+                const isHidden = menu.classList.toggle('hidden');
+                
+                // Atualiza o estado ARIA (Acessibilidade)
+                button.setAttribute('aria-expanded', !isHidden);
+
+                // Animação do ícone do botão (X)
+                if (!isHidden) {
+                    button.querySelector('.top-bar').classList.add('rotate-45', 'translate-y-[5px]');
+                    button.querySelector('.middle-bar').classList.add('opacity-0');
+                    button.querySelector('.bottom-bar').classList.add('-rotate-45', '-translate-y-[5px]');
+                } else {
+                    button.querySelector('.top-bar').classList.remove('rotate-45', 'translate-y-[5px]');
+                    button.querySelector('.middle-bar').classList.remove('opacity-0');
+                    button.querySelector('.bottom-bar').classList.remove('-rotate-45', '-translate-y-[5px]');
+                }
+            });
+
+            // Fechar menu ao clicar em um link
+            menu.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    menu.classList.add('hidden');
+                    button.setAttribute('aria-expanded', 'false');
+                    // Resetar ícone
+                    button.querySelector('.top-bar').classList.remove('rotate-45', 'translate-y-[5px]');
+                    button.querySelector('.middle-bar').classList.remove('opacity-0');
+                    button.querySelector('.bottom-bar').classList.remove('-rotate-45', '-translate-y-[5px]');
+                });
+            });
+        }
+
+        /** Lógica para o Formulário de Contato: Redireciona para o WhatsApp com a mensagem pré-preenchida. (CORRIGIDO) */
+        function setupContactForm() {
+            const form = document.getElementById('contact-form');
+            const feedbackElement = document.getElementById('form-feedback');
+            
+            form.addEventListener('submit', (e) => {
+                e.preventDefault();
+                
+                // Exibir feedback antes de abrir o WhatsApp
+                feedbackElement.classList.remove('hidden');
+                feedbackElement.textContent = 'Mensagem pronta! Redirecionando para o WhatsApp...';
+
+                // 1. Coletar dados
+                const nome = document.getElementById('nome').value.trim();
+                const email = document.getElementById('email').value.trim();
+                const mensagem = document.getElementById('mensagem').value.trim();
+                
+                // 2. Número de telefone fixo (apenas dígitos, essencial para o WhatsApp API)
+                // O número de telefone deve ser formatado como: Código do País + DDD + Número. Ex: 5587996364975
+                const telefone = '5587996364975'; 
+
+                // 3. Constrói o texto da mensagem
+                let texto = `*Mensagem para a Chapa Juventude Azul*\n\n`;
+                texto += `*De:* ${nome}\n`;
+                texto += `*E-mail (Para Resposta):* ${email}\n\n`;
+                texto += `*Mensagem:*\n${mensagem}`;
+
+                // 4. Codifica o texto para ser usado na URL
+                const textoCodificado = encodeURIComponent(texto);
+
+                // 5. Constrói a URL final do WhatsApp (apenas com dígitos no telefone)
+                const whatsappUrl = `https://api.whatsapp.com/send?phone=${telefone}&text=${textoCodificado}`;
+                
+                // 6. Redireciona o usuário para o WhatsApp (após um pequeno atraso para o feedback ser lido)
+                setTimeout(() => {
+                    window.open(whatsappUrl, '_blank');
+                    // Limpa o formulário e esconde o feedback
+                    form.reset();
+                    feedbackElement.classList.add('hidden');
+                }, 1000);
+            });
+        }
+        
+        /** NOVO: Adiciona a classe 'active-nav-link' ao link de navegação correspondente à seção visível. */
+        function setupIntersectionObserverForNavbar() {
+            // IDs das seções para observar
+            const sections = document.querySelectorAll('section[id]'); 
+            const links = document.querySelectorAll('.nav-link, .nav-link-mobile');
+
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    // Se a seção está 50% ou mais na tela
+                    if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+                        const currentId = entry.target.id;
+                        
+                        // Remove a classe 'active-nav-link' de todos os links
+                        links.forEach(link => {
+                            link.classList.remove('active-nav-link');
+                        });
+
+                        // Adiciona a classe 'active-nav-link' ao link correspondente
+                        const targetLink = document.querySelector(`a[href="#${currentId}"]`);
+                        if (targetLink) {
+                            targetLink.classList.add('active-nav-link');
+                        }
+                    }
+                });
+            }, { 
+                // Define o ponto de intersecção no centro da viewport
+                rootMargin: "-50% 0px -50% 0px", 
+                threshold: 0 
+            });
+
+            sections.forEach(section => {
+                // Excluir a seção "quem-somos" (preview) que tem o mesmo nome do link "quem-somos-full"
+                if (section.id !== 'quem-somos') {
+                    observer.observe(section);
+                }
+            });
+        }
+        
+        // ====================================================================
+        // LÓGICA DE ANIMAÇÃO DE ROLAGEM (Scroll Animation Logic)
+        // ====================================================================
+        function setupScrollAnimations() {
+            const elements = document.querySelectorAll('.animate-on-scroll');
+            
+            const observer = new IntersectionObserver((entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('is-visible');
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.1 }); // Começa a animar quando 10% do elemento está visível
+
+            elements.forEach(element => {
+                observer.observe(element);
+            });
+        }
+        
+        // ====================================================================
+        // FUNÇÃO DE CONTAGEM REGRESSIVA (Contagem Regressiva) - ATUALIZADA
+        // ====================================================================
+        const countdownDate = new Date("Nov 24, 2025 08:00:00").getTime(); // Votação inicia às 08h do dia 24/11/2025
+
+        function updateCountdown() {
+            const now = new Date().getTime();
+            const distance = countdownDate - now;
+
+            const timerElement = document.getElementById('countdown-timer');
+
+            if (distance < 0) {
+                if (timerElement) {
+                    timerElement.innerHTML = `<span class="text-xl font-extrabold text-white">VOTAÇÃO EM ANDAMENTO!</span>`;
+                }
+                clearInterval(countdownInterval);
+                return;
+            }
+
+            // Cálculos de tempo (Dias, Horas, Minutos, Segundos e Milissegundos)
+            const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+            // Milissegundos (pega os 3 dígitos restantes)
+            const milliseconds = String(distance % 1000).padStart(3, '0');
+
+            const countdownHTML = `
+                <div class="countdown-item text-center p-2 bg-royal-blue rounded-lg shadow-md">
+                    <div class="text-3xl font-extrabold">${days.toString().padStart(2, '0')}</div>
+                    <div class="text-xs font-semibold opacity-70">DIAS</div>
+                </div>
+                <div class="countdown-item text-center p-2 bg-royal-blue rounded-lg shadow-md">
+                    <div class="text-3xl font-extrabold">${hours.toString().padStart(2, '0')}</div>
+                    <div class="text-xs font-semibold opacity-70">HRS</div>
+                </div>
+                <div class="countdown-item text-center p-2 bg-royal-blue rounded-lg shadow-md">
+                    <div class="text-3xl font-extrabold">${minutes.toString().padStart(2, '0')}</div>
+                    <div class="text-xs font-semibold opacity-70">MIN</div>
+                </div>
+                <div class="countdown-item text-center p-2 bg-royal-blue rounded-lg shadow-md">
+                    <div class="text-3xl font-extrabold">${seconds.toString().padStart(2, '0')}</div>
+                    <div class="text-xs font-semibold opacity-70">SEG</div>
+                </div>
+                <!-- NOVO: Milissegundos -->
+                <div class="countdown-item countdown-ms text-center p-2 bg-royal-blue rounded-lg shadow-md hidden sm:block">
+                    <div class="text-3xl font-extrabold text-sm sm:text-lg">${milliseconds}</div>
+                    <div class="text-xs font-semibold opacity-70">MS</div>
+                </div>
+            `;
+
+            if (timerElement) {
+                timerElement.innerHTML = countdownHTML;
+            }
+        }
+
+        // ALTERAÇÃO: Mudar o intervalo para 100ms (ou menos) para atualizar os milissegundos
+        const countdownInterval = setInterval(updateCountdown, 100); 
+        // ====================================================================
+
+
+        // Inicialização de todas as funções e remoção do loader
+        window.onload = function() {
+            // 1. Torna o corpo do site visível
+            document.body.style.visibility = 'visible';
+
+            // 2. Inicializa as funções de renderização
+            updateCountdown();
+            initCategorias();
+            // A renderização da lista deve vir antes da de destaques
+            renderPropostasLista(propostasCompletasData); 
+            renderPropostasDestaque();
+            renderNoticiasPreview();
+            renderMembrosGaleria();
+            setupMobileMenu();
+            setupContactForm();
+            setupScrollAnimations();
+            setupIntersectionObserverForNavbar(); // NOVO: Inicializa o observador da navbar
+
+            // 3. Remove o preloader suavemente
+            const preloader = document.getElementById('preloader');
+            if (preloader) {
+                preloader.style.opacity = '0';
+                setTimeout(() => {
+                    preloader.style.display = 'none';
+                }, 300); // Tempo da transição CSS
+            }
+        };
+    </script>
+</body>
+</html>
